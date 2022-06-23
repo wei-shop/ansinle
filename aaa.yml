@@ -1,0 +1,37 @@
+- name: Nginx Service Config
+  hosts: cms-proxy
+  remote_user: root
+  tasks:
+  - name: Copy CMS Reverse Proxy Config File
+    copy:
+      src: /etc/ansible/host_config/nginx/cms/cms.xlte1dl.vip_https.conf
+      dest: /etc/nginx/conf.d/cms.xlte1dl.vip_https.conf
+      
+- name: Get UAT GBMS HTML Files
+  hosts: uat-backoffice
+  remote_user: root
+  tasks:
+  - name: Pull UAT GBMS HTML Files
+    synchronize:
+      mode: pull
+      src: /var/www/backoffice/
+      dest: /tmp/prod_gbms_html/
+      delete: yes
+
+- name: Update GBMS HTML Files
+  hosts: cms
+  remote_user: root
+  tasks:
+  - name: Push GBMS HTML Files
+    synchronize:
+      mode: push
+      src: /tmp/prod_gbms_html/
+      dest: /var/www/cms/
+      delete: yes
+  - name: Change GBMS HTML Files Owner Group Mode
+    file:
+      path: /var/www/cms
+      owner: nobody
+      group: nobody
+      recurse: yes
+
